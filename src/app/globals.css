@@ -5,97 +5,122 @@
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  --background: #070c14;
-  --foreground: #e1e9f5;
+  --bg: #0f1216;
+  --surface: #161a20;
+  --surface-hover: #1f242c;
+  --border: #262b33;
+  --text: #e6e8eb;
+  --text-muted: #8b929c;
+  --accent: #f5a524;
+  --font-ui: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  font-family: var(--font-ui);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Custom scrollbars */
+/* Tabular numbers for all telemetry data */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Subtle, standard scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a111e;
+  background: #111418;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f3352;
+  background: #262b33;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2a4773;
+  background: #343b46;
 }
 
-/* Leaflet Dark Radar styling overrides */
+/* Leaflet Operational Map container overrides */
 .leaflet-container {
-  background-color: #070c14 !important;
+  background-color: var(--bg) !important;
+  font-family: var(--font-ui) !important;
   outline: none;
 }
 
+/* Clean, flat zoom control */
 .leaflet-bar {
-  border: 1px solid #1b2c47 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
-  border-radius: 6px !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  border-radius: 4px !important;
   overflow: hidden;
 }
 
 .leaflet-bar a {
-  background-color: #0d1624 !important;
-  color: #00e5ff !important;
-  border-bottom: 1px solid #1b2c47 !important;
-  transition: all 0.2s;
+  background-color: var(--surface) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  font-size: 14px !important;
+  transition: background-color 0.15s ease;
 }
 
 .leaflet-bar a:hover {
-  background-color: #16253b !important;
+  background-color: var(--surface-hover) !important;
   color: #ffffff !important;
 }
 
 .leaflet-control-attribution {
-  background: rgba(7, 12, 20, 0.8) !important;
-  color: #5d7594 !important;
+  background: rgba(15, 18, 22, 0.85) !important;
+  color: var(--text-muted) !important;
   font-size: 10px !important;
+  padding: 2px 6px !important;
 }
 
 .leaflet-control-attribution a {
-  color: #00e5ff !important;
+  color: #b0b7c2 !important;
+  text-decoration: none;
 }
 
-/* Aircraft marker rotation container */
+.leaflet-control-attribution a:hover {
+  text-decoration: underline;
+}
+
+/* Aircraft Marker Container */
 .custom-aircraft-marker {
   background: transparent !important;
   border: none !important;
 }
 
-.aircraft-marker-container {
-  transition: transform 0.5s ease-out;
-  transform-origin: center center;
+.aircraft-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
+  transform-origin: center center;
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1);
+  will-change: transform;
 }
 
-/* Radar ping wave */
-@keyframes radarPing {
-  0% {
-    transform: scale(0.6);
-    opacity: 0.9;
-  }
-  100% {
-    transform: scale(2.4);
-    opacity: 0;
-  }
+/* Tooltip for tactical hover */
+.atc-tooltip {
+  background-color: #161a20 !important;
+  border: 1px solid #262b33 !important;
+  border-radius: 4px !important;
+  color: #e6e8eb !important;
+  padding: 4px 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  font-family: var(--font-ui) !important;
 }
 
-.radar-ping {
-  animation: radarPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+.atc-tooltip::before {
+  border-top-color: #262b33 !important;
 }

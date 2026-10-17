@@ -2,16 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useAirspaceStore } from "@/store/useAirspaceStore";
-import { Aircraft } from "@/types/flight";
-import {
-  ArrowUpDown,
-  ChevronDown,
-  ChevronUp,
-  Crosshair,
-  Plane,
-  TableProperties,
-  X,
-} from "lucide-react";
+import { ArrowUpDown, X } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -22,24 +13,17 @@ type SortField = "callsign" | "altitude" | "velocity" | "track" | "squawk";
 type SortDirection = "asc" | "desc";
 
 export default function FlightRosterTable({ isOpen, onClose }: Props) {
-  const {
-    aircraftMap,
-    selectedIcao24,
-    filters,
-    setSelectedAircraft,
-  } = useAirspaceStore();
+  const { aircraftMap, selectedIcao24, filters, setSelectedAircraft } = useAirspaceStore();
 
   const [sortField, setSortField] = useState<SortField>("altitude");
   const [sortDir, setSortDir] = useState<SortDirection>("desc");
 
   const filteredAircraft = useMemo(() => {
     return Object.values(aircraftMap).filter((ac) => {
-      // Must have valid coordinates
       const lat = ac.deadReckonedLat ?? ac.latitude;
       const lon = ac.deadReckonedLon ?? ac.longitude;
       if (lat === null || lon === null) return false;
 
-      // Filter: Search Query
       if (filters.searchQuery.trim()) {
         const query = filters.searchQuery.toLowerCase().trim();
         const matchesCallsign = ac.callsign.toLowerCase().includes(query);
@@ -48,20 +32,21 @@ export default function FlightRosterTable({ isOpen, onClose }: Props) {
         if (!matchesCallsign && !matchesIcao && !matchesCountry) return false;
       }
 
-      // Filter: Status
       if (filters.status === "airborne" && ac.onGround) return false;
       if (filters.status === "ground" && !ac.onGround) return false;
 
-      // Filter: Emergency squawk only
-      if (filters.emergencyOnly && ac.squawk !== "7700" && ac.squawk !== "7600" && ac.squawk !== "7500") {
+      if (
+        filters.emergencyOnly &&
+        ac.squawk !== "7700" &&
+        ac.squawk !== "7600" &&
+        ac.squawk !== "7500"
+      ) {
         return false;
       }
 
-      // Filter: Altitude
       const alt = ac.baroAltitudeFt ?? 0;
       if (alt < filters.minAltitudeFt || alt > filters.maxAltitudeFt) return false;
 
-      // Filter: Speed
       const speed = ac.velocityKts ?? 0;
       if (speed < filters.minSpeedKts || speed > filters.maxSpeedKts) return false;
 
@@ -113,82 +98,81 @@ export default function FlightRosterTable({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-20 max-h-72 bg-radar-card/95 border-t border-radar-border shadow-2xl backdrop-blur-md flex flex-col font-mono text-radar-text animate-in slide-in-from-bottom duration-200">
+    <div className="absolute bottom-0 left-0 right-0 z-20 max-h-72 bg-[#161a20] border-t border-[#262b33] flex flex-col text-xs text-[#e6e8eb] select-none shadow-xl">
       {/* Table Header Controls */}
-      <div className="px-4 py-2 border-b border-radar-border bg-radar-bg/80 flex items-center justify-between text-xs">
+      <div className="px-4 py-2 border-b border-[#262b33] bg-[#14171c] flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <TableProperties className="w-4 h-4 text-radar-primary" />
-          <span className="font-bold text-white tracking-wider">AIRSPACE FLIGHT ROSTER</span>
-          <span className="px-2 py-0.5 rounded bg-radar-bg border border-radar-border text-[11px] text-radar-muted font-bold">
-            {sortedAircraft.length} AIRCRAFT DISPLAYED
+          <span className="font-semibold text-xs text-[#e6e8eb]">Airspace Flight Roster</span>
+          <span className="text-[11px] text-[#8b929c] font-mono tabular-nums">
+            ({sortedAircraft.length} flights)
           </span>
         </div>
 
         <button
           onClick={onClose}
-          className="p-1 rounded hover:bg-radar-bg text-radar-muted hover:text-white transition-colors"
+          className="p-1 rounded text-[#8b929c] hover:text-[#e6e8eb] hover:bg-[#1f242c] transition-colors"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* Table Content */}
+      {/* Table Grid */}
       <div className="overflow-x-auto overflow-y-auto flex-1">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-radar-bg/90 sticky top-0 border-b border-radar-border text-[10px] uppercase text-radar-muted font-bold">
+        <table className="w-full text-left text-xs border-collapse">
+          <thead className="bg-[#14171c] sticky top-0 border-b border-[#262b33] text-[11px] text-[#8b929c] font-medium">
             <tr>
               <th
                 onClick={() => toggleSort("callsign")}
-                className="py-2 px-3 cursor-pointer hover:text-radar-primary select-none"
+                className="py-1.5 px-3 cursor-pointer hover:text-[#e6e8eb]"
               >
                 <div className="flex items-center gap-1">
-                  <span>CALLSIGN</span>
+                  <span>Callsign</span>
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
-              <th className="py-2 px-3">COUNTRY</th>
+              <th className="py-1.5 px-3">ICAO</th>
+              <th className="py-1.5 px-3">Country</th>
               <th
                 onClick={() => toggleSort("altitude")}
-                className="py-2 px-3 cursor-pointer hover:text-radar-primary select-none"
+                className="py-1.5 px-3 cursor-pointer hover:text-[#e6e8eb]"
               >
                 <div className="flex items-center gap-1">
-                  <span>ALTITUDE (FT)</span>
+                  <span>Altitude</span>
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
               <th
                 onClick={() => toggleSort("velocity")}
-                className="py-2 px-3 cursor-pointer hover:text-radar-primary select-none"
+                className="py-1.5 px-3 cursor-pointer hover:text-[#e6e8eb]"
               >
                 <div className="flex items-center gap-1">
-                  <span>SPEED (KTS)</span>
+                  <span>Speed</span>
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
               <th
                 onClick={() => toggleSort("track")}
-                className="py-2 px-3 cursor-pointer hover:text-radar-primary select-none"
+                className="py-1.5 px-3 cursor-pointer hover:text-[#e6e8eb]"
               >
                 <div className="flex items-center gap-1">
-                  <span>HEADING</span>
+                  <span>Track</span>
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
-              <th className="py-2 px-3">V.RATE</th>
+              <th className="py-1.5 px-3">V.Rate</th>
               <th
                 onClick={() => toggleSort("squawk")}
-                className="py-2 px-3 cursor-pointer hover:text-radar-primary select-none"
+                className="py-1.5 px-3 cursor-pointer hover:text-[#e6e8eb]"
               >
                 <div className="flex items-center gap-1">
-                  <span>SQUAWK</span>
+                  <span>Squawk</span>
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
-              <th className="py-2 px-3">STATUS</th>
-              <th className="py-2 px-3 text-right">ACTION</th>
+              <th className="py-1.5 px-3 text-right">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-radar-border/40 font-mono">
+          <tbody className="divide-y divide-[#262b33]/60 font-mono text-[11px] tabular-nums">
             {sortedAircraft.map((ac) => {
               const isSelected = selectedIcao24 === ac.icao24;
               const isEmergency = ac.squawk === "7700";
@@ -199,70 +183,54 @@ export default function FlightRosterTable({ isOpen, onClose }: Props) {
                   onClick={() => setSelectedAircraft(ac.icao24)}
                   className={`cursor-pointer transition-colors ${
                     isSelected
-                      ? "bg-radar-primary/15 font-bold text-white"
+                      ? "bg-[#1f242c] text-[#f5a524] font-medium"
                       : isEmergency
-                      ? "bg-rose-950/30 text-rose-300 hover:bg-rose-950/50"
-                      : "hover:bg-radar-bg/70"
+                      ? "bg-[#e05252]/10 text-[#e05252]"
+                      : "hover:bg-[#1a1f26]"
                   }`}
                 >
-                  <td className="py-2 px-3 font-bold text-radar-primary flex items-center gap-2">
-                    <Plane
-                      className="w-3.5 h-3.5 shrink-0"
-                      style={{
-                        transform: `rotate(${ac.trueTrack ?? 0}deg)`,
-                      }}
-                    />
-                    <span>{ac.callsign}</span>
-                    <span className="text-[10px] text-radar-muted font-normal uppercase">
-                      {ac.icao24}
-                    </span>
+                  <td className="py-1.5 px-3 font-semibold text-[#e6e8eb]">
+                    {ac.callsign}
                   </td>
-                  <td className="py-2 px-3 text-radar-muted truncate max-w-[120px]">
+                  <td className="py-1.5 px-3 uppercase text-[#8b929c]">
+                    {ac.icao24}
+                  </td>
+                  <td className="py-1.5 px-3 font-sans text-[#8b929c] truncate max-w-[120px]">
                     {ac.originCountry}
                   </td>
-                  <td className="py-2 px-3">
-                    {ac.baroAltitudeFt !== null ? `${ac.baroAltitudeFt.toLocaleString()} FT` : "---"}
+                  <td className="py-1.5 px-3">
+                    {ac.onGround
+                      ? "Ground"
+                      : ac.baroAltitudeFt !== null
+                      ? `${ac.baroAltitudeFt.toLocaleString()} ft`
+                      : "---"}
                   </td>
-                  <td className="py-2 px-3">
-                    {ac.velocityKts !== null ? `${ac.velocityKts} KTS` : "---"}
+                  <td className="py-1.5 px-3">
+                    {ac.velocityKts !== null ? `${ac.velocityKts} kts` : "---"}
                   </td>
-                  <td className="py-2 px-3">
+                  <td className="py-1.5 px-3">
                     {ac.trueTrack !== null ? `${ac.trueTrack}°` : "---"}
                   </td>
-                  <td className="py-2 px-3">
+                  <td className="py-1.5 px-3">
                     {ac.verticalRateFpm !== null
-                      ? `${ac.verticalRateFpm > 0 ? "+" : ""}${ac.verticalRateFpm} FPM`
+                      ? `${ac.verticalRateFpm > 0 ? "+" : ""}${ac.verticalRateFpm}`
                       : "0"}
                   </td>
-                  <td className="py-2 px-3">
+                  <td className="py-1.5 px-3">
                     <span
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                        isEmergency
-                          ? "bg-radar-red text-white animate-pulse"
-                          : "bg-radar-bg border border-radar-border text-radar-yellow"
-                      }`}
+                      className={
+                        isEmergency ? "text-[#e05252] font-bold" : "text-[#8b929c]"
+                      }
                     >
                       {ac.squawk || "---"}
                     </span>
                   </td>
-                  <td className="py-2 px-3">
+                  <td className="py-1.5 px-3 text-right font-sans text-[10px]">
                     {ac.onGround ? (
-                      <span className="text-[10px] text-amber-400 font-semibold">GROUND</span>
+                      <span className="text-[#8b929c]">Ground</span>
                     ) : (
-                      <span className="text-[10px] text-emerald-400 font-semibold">AIRBORNE</span>
+                      <span className="text-[#e6e8eb]">Airborne</span>
                     )}
-                  </td>
-                  <td className="py-2 px-3 text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedAircraft(ac.icao24);
-                      }}
-                      className="p-1 rounded bg-radar-primary/10 hover:bg-radar-primary/20 text-radar-primary border border-radar-primary/30 text-[10px] inline-flex items-center gap-1"
-                    >
-                      <Crosshair className="w-3 h-3" />
-                      <span>TRACK</span>
-                    </button>
                   </td>
                 </tr>
               );

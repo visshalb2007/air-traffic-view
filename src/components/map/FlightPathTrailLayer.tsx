@@ -15,7 +15,7 @@ export default function FlightPathTrailLayer({ map }: Props) {
   const waypointMarkersRef = useRef<L.CircleMarker[]>([]);
 
   useEffect(() => {
-    // 1. Clear previous polyline & waypoints
+    // Clear previous polyline & waypoints
     if (polylineRef.current) {
       polylineRef.current.remove();
       polylineRef.current = null;
@@ -32,61 +32,55 @@ export default function FlightPathTrailLayer({ map }: Props) {
     const currentLat = aircraft.deadReckonedLat ?? aircraft.latitude;
     const currentLon = aircraft.deadReckonedLon ?? aircraft.longitude;
 
-    // Collect all coordinates along path
     const latLngs: L.LatLngExpression[] = [];
-
     history.forEach((pt) => {
       latLngs.push([pt.lat, pt.lon]);
     });
 
-    // Add current position to end of path if available
     if (currentLat !== null && currentLon !== null) {
       latLngs.push([currentLat, currentLon]);
     }
 
     if (latLngs.length < 2) return;
 
-    // Draw glowing flight trail polyline
+    // Thin 1.5px operational track line in accent amber
     const polyline = L.polyline(latLngs, {
-      color: "#00e5ff",
-      weight: 3,
+      color: "#f5a524",
+      weight: 1.5,
       opacity: 0.85,
-      dashArray: "6, 8",
       lineCap: "round",
+      lineJoin: "round",
     }).addTo(map);
 
     polylineRef.current = polyline;
 
-    // Render breadcrumb nodes along the historical trail
+    // Minimal waypoint checkpoints
     history.forEach((pt, index) => {
       const isLast = index === history.length - 1;
-      if (isLast) return; // current aircraft marker handles the last point
+      if (isLast) return;
 
       const timeAgoSecs = Math.max(0, Math.round((Date.now() - pt.timestamp) / 1000));
       const formattedTime = new Date(pt.timestamp).toLocaleTimeString();
 
       const waypointMarker = L.circleMarker([pt.lat, pt.lon], {
-        radius: 4,
-        color: "#00e5ff",
-        weight: 1.5,
-        fillColor: "#0d1624",
-        fillOpacity: 0.9,
+        radius: 2.5,
+        color: "#f5a524",
+        weight: 1,
+        fillColor: "#161a20",
+        fillOpacity: 1,
       });
 
       const tooltipHtml = `
-        <div class="font-mono text-[11px] p-1 space-y-0.5">
-          <div class="font-bold text-radar-primary">WAYPOINT #${index + 1}</div>
-          <div class="text-gray-300">TIME: ${formattedTime} (${timeAgoSecs}s ago)</div>
-          <div class="text-gray-300">ALT: ${pt.altitudeFeet?.toLocaleString() ?? "---"} FT</div>
-          <div class="text-gray-300">SPD: ${pt.velocityKnots ?? "---"} KTS</div>
-          <div class="text-gray-300">HDG: ${pt.heading ?? "---"}&deg;</div>
+        <div style="font-size: 11px; font-family: var(--font-data);">
+          <div style="color: #8b929c;">Point #${index + 1} • ${formattedTime} (${timeAgoSecs}s ago)</div>
+          <div style="color: #e6e8eb;">${pt.altitudeFeet?.toLocaleString() ?? "---"} ft • ${pt.velocityKnots ?? "---"} kts • ${pt.heading ?? "---"}&deg;</div>
         </div>
       `;
 
       waypointMarker.bindTooltip(tooltipHtml, {
         direction: "top",
-        offset: [0, -6],
-        className: "atc-tactical-tooltip",
+        offset: [0, -4],
+        className: "atc-tooltip",
       });
 
       waypointMarker.addTo(map);
@@ -94,7 +88,6 @@ export default function FlightPathTrailLayer({ map }: Props) {
     });
   }, [aircraftMap, selectedIcao24, showTrails, map]);
 
-  // Clean up on unmount
   useEffect(() => {
     return () => {
       if (polylineRef.current) {

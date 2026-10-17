@@ -2,15 +2,7 @@
 
 import { useAirspaceStore } from "@/store/useAirspaceStore";
 import { AIRSPACE_REGIONS } from "@/lib/regions";
-import {
-  AlertTriangle,
-  Globe2,
-  Plane,
-  RotateCcw,
-  Search,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
+import { X } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -18,103 +10,81 @@ interface Props {
 }
 
 export default function FilterPanel({ isOpen, onClose }: Props) {
-  const {
-    filters,
-    setFilters,
-    resetFilters,
-    currentRegion,
-    setRegion,
-  } = useAirspaceStore();
+  const { filters, setFilters, resetFilters, currentRegion, setRegion } = useAirspaceStore();
 
   if (!isOpen) return null;
 
   return (
-    <div className="absolute top-20 left-4 z-20 w-80 md:w-96 max-w-[calc(100vw-2rem)] bg-radar-card/95 border border-radar-border rounded-xl shadow-2xl backdrop-blur-md overflow-hidden font-mono text-radar-text animate-in fade-in slide-in-from-left duration-200">
+    <div className="absolute top-14 left-4 z-20 w-80 max-w-[calc(100vw-2rem)] bg-[#161a20] border border-[#262b33] rounded shadow-xl text-[#e6e8eb] select-none text-xs">
       {/* Header */}
-      <div className="p-4 border-b border-radar-border bg-radar-bg/60 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-white font-bold text-sm tracking-wider">
-          <SlidersHorizontal className="w-4 h-4 text-radar-primary" />
-          <span>AIRSPACE RADAR FILTERS</span>
-        </div>
-        <div className="flex items-center gap-1">
+      <div className="px-4 py-3 border-b border-[#262b33] flex items-center justify-between">
+        <span className="font-semibold text-sm text-[#e6e8eb]">Airspace Filters</span>
+        <div className="flex items-center gap-2">
           <button
             onClick={resetFilters}
-            title="Reset all filters"
-            className="p-1.5 rounded-lg hover:bg-radar-bg text-radar-muted hover:text-radar-primary transition-colors text-xs flex items-center gap-1"
+            className="text-[11px] text-[#8b929c] hover:text-[#e6e8eb] transition-colors"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="text-[10px]">RESET</span>
+            Reset
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-radar-bg text-radar-muted hover:text-white transition-colors"
+            className="p-1 rounded text-[#8b929c] hover:text-[#e6e8eb] hover:bg-[#1f242c] transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      <div className="p-4 space-y-4 text-xs max-h-[calc(100vh-140px)] overflow-y-auto">
-        {/* Callsign / ICAO Search */}
+      <div className="p-4 space-y-4 max-h-[calc(100vh-120px)] overflow-y-auto">
+        {/* Search */}
         <div>
-          <label className="text-[10px] uppercase text-radar-muted font-bold block mb-1.5">
-            CALLSIGN / ICAO24 / COUNTRY
+          <label className="text-xs text-[#8b929c] block mb-1">
+            Callsign, ICAO, or Country
           </label>
-          <div className="relative">
-            <Search className="w-4 h-4 text-radar-muted absolute left-3 top-2.5" />
-            <input
-              type="text"
-              placeholder="e.g. BAW, DLH, France, 406f52..."
-              value={filters.searchQuery}
-              onChange={(e) => setFilters({ searchQuery: e.target.value })}
-              className="w-full bg-radar-bg border border-radar-border rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-white placeholder-radar-muted/50 focus:outline-none focus:border-radar-primary"
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="e.g. BAW, 39DE4A, France..."
+            value={filters.searchQuery}
+            onChange={(e) => setFilters({ searchQuery: e.target.value })}
+            className="w-full bg-[#0f1216] border border-[#262b33] focus:border-[#4f5968] rounded px-2.5 py-1.5 text-xs text-[#e6e8eb] placeholder-[#555d68] focus:outline-none"
+          />
         </div>
 
-        {/* Airspace Region Selector Grid */}
+        {/* Region Presets */}
         <div>
-          <label className="text-[10px] uppercase text-radar-muted font-bold block mb-1.5 flex items-center gap-1.5">
-            <Globe2 className="w-3.5 h-3.5 text-radar-primary" />
-            <span>SECTOR REGION</span>
-          </label>
-          <div className="grid grid-cols-2 gap-2">
+          <label className="text-xs text-[#8b929c] block mb-1">Sector Region</label>
+          <div className="grid grid-cols-2 gap-1.5">
             {AIRSPACE_REGIONS.map((region) => {
               const isSelected = currentRegion.id === region.id;
               return (
                 <button
                   key={region.id}
                   onClick={() => setRegion(region)}
-                  className={`p-2 rounded-lg border text-left text-xs font-mono transition-all ${
+                  className={`px-2 py-1.5 rounded border text-left text-xs transition-colors truncate ${
                     isSelected
-                      ? "bg-radar-primary/10 border-radar-primary text-radar-primary font-bold shadow-[0_0_8px_rgba(0,229,255,0.2)]"
-                      : "bg-radar-bg/70 border-radar-border text-radar-muted hover:text-white hover:border-radar-border/80"
+                      ? "bg-[#1f242c] border-[#f5a524] text-[#f5a524] font-medium"
+                      : "bg-[#0f1216] border-[#262b33] text-[#8b929c] hover:text-[#e6e8eb] hover:border-[#38404d]"
                   }`}
                 >
-                  <div className="flex items-center gap-1.5">
-                    <span>{region.flag}</span>
-                    <span className="truncate">{region.name}</span>
-                  </div>
+                  {region.name}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Flight Status: Airborne vs Ground */}
+        {/* Status: All / Airborne / Ground */}
         <div>
-          <label className="text-[10px] uppercase text-radar-muted font-bold block mb-1.5">
-            FLIGHT STATUS
-          </label>
-          <div className="grid grid-cols-3 gap-2">
+          <label className="text-xs text-[#8b929c] block mb-1">Flight Status</label>
+          <div className="grid grid-cols-3 gap-1">
             {(["all", "airborne", "ground"] as const).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setFilters({ status: mode })}
-                className={`py-1.5 px-2 rounded-lg border text-center uppercase text-[11px] font-bold transition-all ${
+                className={`py-1 rounded border capitalize text-xs transition-colors ${
                   filters.status === mode
-                    ? "bg-radar-primary/15 border-radar-primary text-radar-primary"
-                    : "bg-radar-bg border-radar-border text-radar-muted hover:text-white"
+                    ? "bg-[#1f242c] border-[#f5a524] text-[#f5a524] font-medium"
+                    : "bg-[#0f1216] border-[#262b33] text-[#8b929c] hover:text-[#e6e8eb]"
                 }`}
               >
                 {mode}
@@ -123,11 +93,13 @@ export default function FilterPanel({ isOpen, onClose }: Props) {
           </div>
         </div>
 
-        {/* Altitude Range Slider */}
-        <div className="space-y-1.5">
-          <div className="flex justify-between items-center text-[10px] text-radar-muted uppercase font-bold">
-            <span>MAX ALTITUDE</span>
-            <span className="text-radar-primary">{filters.maxAltitudeFt.toLocaleString()} FT</span>
+        {/* Maximum Altitude Slider */}
+        <div className="space-y-1">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-[#8b929c]">Maximum altitude</span>
+            <span className="font-mono tabular-nums text-[#e6e8eb]">
+              {filters.maxAltitudeFt.toLocaleString()} ft
+            </span>
           </div>
           <input
             type="range"
@@ -136,20 +108,17 @@ export default function FilterPanel({ isOpen, onClose }: Props) {
             step={1000}
             value={filters.maxAltitudeFt}
             onChange={(e) => setFilters({ maxAltitudeFt: Number(e.target.value) })}
-            className="w-full accent-radar-primary cursor-pointer"
+            className="w-full accent-[#f5a524] cursor-pointer"
           />
-          <div className="flex justify-between text-[10px] text-radar-muted">
-            <span>0 FT</span>
-            <span>25,000 FT</span>
-            <span>50,000+ FT</span>
-          </div>
         </div>
 
-        {/* Speed Range Slider */}
-        <div className="space-y-1.5">
-          <div className="flex justify-between items-center text-[10px] text-radar-muted uppercase font-bold">
-            <span>MAX GROUND SPEED</span>
-            <span className="text-radar-primary">{filters.maxSpeedKts} KTS</span>
+        {/* Maximum Ground Speed Slider */}
+        <div className="space-y-1">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-[#8b929c]">Maximum ground speed</span>
+            <span className="font-mono tabular-nums text-[#e6e8eb]">
+              {filters.maxSpeedKts} kts
+            </span>
           </div>
           <input
             type="range"
@@ -158,28 +127,22 @@ export default function FilterPanel({ isOpen, onClose }: Props) {
             step={25}
             value={filters.maxSpeedKts}
             onChange={(e) => setFilters({ maxSpeedKts: Number(e.target.value) })}
-            className="w-full accent-radar-primary cursor-pointer"
+            className="w-full accent-[#f5a524] cursor-pointer"
           />
-          <div className="flex justify-between text-[10px] text-radar-muted">
-            <span>50 KTS</span>
-            <span>400 KTS</span>
-            <span>800+ KTS</span>
-          </div>
         </div>
 
         {/* Emergency Squawk Filter */}
-        <div className="pt-2 border-t border-radar-border">
-          <label className="flex items-center gap-2.5 cursor-pointer p-2 rounded-lg hover:bg-radar-bg/60 transition-colors">
+        <div className="pt-2 border-t border-[#262b33]">
+          <label className="flex items-center gap-2 cursor-pointer py-1">
             <input
               type="checkbox"
               checked={filters.emergencyOnly}
               onChange={(e) => setFilters({ emergencyOnly: e.target.checked })}
-              className="accent-radar-red w-4 h-4 rounded cursor-pointer"
+              className="accent-[#f5a524] w-3.5 h-3.5 rounded"
             />
-            <div className="flex items-center gap-1.5 text-xs text-radar-red font-bold">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span>EMERGENCY SQUAWKS ONLY (7700/7600/7500)</span>
-            </div>
+            <span className="text-xs text-[#e6e8eb]">
+              Emergency squawks only (7700 / 7600 / 7500)
+            </span>
           </label>
         </div>
       </div>

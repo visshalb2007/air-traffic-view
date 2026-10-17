@@ -25,21 +25,17 @@ export default function ATCMap() {
       attributionControl: true,
     });
 
-    // Dark Matter Tactical Radar Tiles (CARTO requires ?key= parameter)
-    const cartoKey =
-      process.env.NEXT_PUBLIC_CARTO_API_KEY || "cb1_4n2q_1_af5bf478270c0f1e0b4d6c31";
-    const tileUrl = cartoKey
-      ? `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png?key=${cartoKey}`
-      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+    // Clean, Keyless Dark Gray Basemap (Free, no watermark)
+    L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+      {
+        attribution:
+          '&copy; <a href="https://www.esri.com/">Esri</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> | OpenSky ADS-B',
+        maxZoom: 16,
+      }
+    ).addTo(leafletMap);
 
-    L.tileLayer(tileUrl, {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a> | Live OpenSky ADS-B',
-      subdomains: "abcd",
-      maxZoom: 19,
-    }).addTo(leafletMap);
-
-    // Zoom control at bottom right
+    // Flat, square zoom control at bottom right
     L.control
       .zoom({
         position: "bottomright",
@@ -63,29 +59,23 @@ export default function ATCMap() {
   useEffect(() => {
     if (!map) return;
     map.flyTo(currentRegion.center, currentRegion.zoom, {
-      duration: 1.2,
-      easeLinearity: 0.25,
+      duration: 1.0,
+      easeLinearity: 0.2,
     });
   }, [currentRegion, map]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden select-none bg-radar-bg">
+    <div className="relative w-full h-full overflow-hidden select-none bg-atc-bg">
       {/* Leaflet DOM container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
-      {/* Child layers connected to the Leaflet map instance */}
+      {/* Aircraft markers and flight trails */}
       {map && (
         <>
           <FlightPathTrailLayer map={map} />
           <AircraftMarkerLayer map={map} />
         </>
       )}
-
-      {/* Radar Vignette & HUD Crosshair Overlay */}
-      <div className="pointer-events-none absolute inset-0 z-10 shadow-[inset_0_0_80px_rgba(7,12,20,0.85)]" />
-
-      {/* Radar Sweep Effect (subtle atmospheric visual) */}
-      <div className="pointer-events-none absolute -inset-[100%] z-10 opacity-[0.03] animate-radar-sweep bg-[conic-gradient(from_0deg_at_50%_50%,rgba(0,229,255,0.8)_0deg,transparent_60deg,transparent_360deg)]" />
     </div>
   );
 }
