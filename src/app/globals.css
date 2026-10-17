@@ -71,6 +71,11 @@ body {
 }
 
 /* Aircraft marker rotation container */
+.custom-aircraft-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
 .aircraft-marker-container {
   transition: transform 0.5s ease-out;
   transform-origin: center center;
