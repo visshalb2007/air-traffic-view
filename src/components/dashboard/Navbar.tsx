@@ -11,6 +11,8 @@ interface Props {
   onToggleTable: () => void;
   onToggleAlerts: () => void;
   onReplayIntro?: () => void;
+  isFilterOpen?: boolean;
+  isTableOpen?: boolean;
 }
 
 export default function Navbar({
@@ -19,6 +21,8 @@ export default function Navbar({
   onToggleTable,
   onToggleAlerts,
   onReplayIntro,
+  isFilterOpen,
+  isTableOpen,
 }: Props) {
   const {
     currentRegion,
@@ -196,14 +200,22 @@ export default function Navbar({
       <div className="flex items-center gap-1.5 text-xs">
         <button
           onClick={onToggleFilters}
-          className="px-2.5 py-1 rounded text-[#8b929c] hover:text-[#e6e8eb] hover:bg-[#1e232b] transition-colors"
+          className={`px-2.5 py-1 rounded transition-colors ${
+            isFilterOpen
+              ? "bg-[#1e232b] text-[#f5a524] font-medium border border-[#38404d]"
+              : "text-[#8b929c] hover:text-[#e6e8eb] hover:bg-[#1e232b]"
+          }`}
         >
           Filters
         </button>
 
         <button
           onClick={onToggleTable}
-          className="px-2.5 py-1 rounded text-[#8b929c] hover:text-[#e6e8eb] hover:bg-[#1e232b] transition-colors"
+          className={`px-2.5 py-1 rounded transition-colors ${
+            isTableOpen
+              ? "bg-[#1e232b] text-[#f5a524] font-medium border border-[#38404d]"
+              : "text-[#8b929c] hover:text-[#e6e8eb] hover:bg-[#1e232b]"
+          }`}
         >
           Roster
         </button>

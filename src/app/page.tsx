@@ -17,7 +17,7 @@ export default function AirTrafficDashboard() {
   const { manualRefresh } = useFlightPolling();
   useDeadReckoningLoop();
 
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [isTableOpen, setIsTableOpen] = useState(false);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
 
@@ -51,6 +51,8 @@ export default function AirTrafficDashboard() {
         onToggleTable={() => setIsTableOpen((prev) => !prev)}
         onToggleAlerts={() => setIsAlertsOpen(true)}
         onReplayIntro={handleReplayIntro}
+        isFilterOpen={isFilterOpen}
+        isTableOpen={isTableOpen}
       />
 
       {/* Offline / Rate-Limit Fallback Banner */}
