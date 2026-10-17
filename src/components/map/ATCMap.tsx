@@ -102,13 +102,21 @@ export default function ATCMap() {
     tileLayerRef.current = newLayer;
   }, [basemap, map]);
 
-  // Handle region switch
+  // Handle region switch (automatically frames the sector's bounding box)
   useEffect(() => {
     if (!map) return;
-    map.flyTo(currentRegion.center, currentRegion.zoom, {
-      duration: 1.0,
-      easeLinearity: 0.2,
-    });
+    map.fitBounds(
+      [
+        [currentRegion.bbox.lamin, currentRegion.bbox.lomin],
+        [currentRegion.bbox.lamax, currentRegion.bbox.lomax],
+      ],
+      {
+        padding: [30, 30],
+        maxZoom: 7,
+        animate: true,
+        duration: 1.0,
+      }
+    );
   }, [currentRegion, map]);
 
   // Handle fly-to target (when aircraft is clicked in search or roster)

@@ -10,6 +10,7 @@ interface Props {
   onToggleFilters: () => void;
   onToggleTable: () => void;
   onToggleAlerts: () => void;
+  onReplayIntro?: () => void;
 }
 
 export default function Navbar({
@@ -17,6 +18,7 @@ export default function Navbar({
   onToggleFilters,
   onToggleTable,
   onToggleAlerts,
+  onReplayIntro,
 }: Props) {
   const {
     currentRegion,
@@ -108,13 +110,16 @@ export default function Navbar({
           ))}
         </select>
 
-        {/* Tracked Count */}
-        <span className="text-xs text-[#8b929c] hidden md:inline">
-          <strong className="text-[#e6e8eb] font-mono tabular-nums font-semibold">
-            {totalAircraft.toLocaleString()}
-          </strong>{" "}
-          airborne
-        </span>
+        {/* Tracked Count with Colorful Live Pulse */}
+        <div className="flex items-center gap-1.5 text-xs text-[#8b929c] hidden md:flex">
+          <span className="w-2 h-2 rounded-full bg-[#00ff88] shadow-[0_0_6px_#00ff88] animate-pulse" />
+          <span>
+            <strong className="text-[#00ff88] font-mono tabular-nums font-bold">
+              {totalAircraft.toLocaleString()}
+            </strong>{" "}
+            airborne
+          </span>
+        </div>
 
         {/* Status text */}
         <span className="text-[11px] text-[#8b929c] hidden xl:inline border-l border-[#262b33] pl-3">
@@ -244,6 +249,17 @@ export default function Navbar({
         >
           Sim: {isOfflineMode ? "On" : "Off"}
         </button>
+
+        {/* Flyover Intro Replay */}
+        {onReplayIntro && (
+          <button
+            onClick={onReplayIntro}
+            title="Play cinematic jet flyover animation"
+            className="px-2 py-1 rounded text-[11px] font-sans text-[#00e5ff] hover:bg-[#1e232b] border border-[#00e5ff]/30 transition-colors hidden lg:flex items-center gap-1"
+          >
+            <span>✈ Flyover</span>
+          </button>
+        )}
 
         {/* Subtle Refresh button */}
         <button
