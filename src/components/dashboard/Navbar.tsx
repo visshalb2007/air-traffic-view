@@ -23,6 +23,8 @@ export default function Navbar({
   const {
     currentRegion,
     setRegion,
+    customBbox,
+    setCustomBbox,
     connectionState,
     aircraftMap,
     pollCountdown,
@@ -96,13 +98,22 @@ export default function Navbar({
 
         {/* Region Selector */}
         <select
-          value={currentRegion.id}
+          value={customBbox ? "custom" : currentRegion.id}
           onChange={(e) => {
+            if (e.target.value === "custom") return;
             const selected = AIRSPACE_REGIONS.find((r) => r.id === e.target.value);
-            if (selected) setRegion(selected);
+            if (selected) {
+              setCustomBbox(null);
+              setRegion(selected);
+            }
           }}
           className="bg-[#161a20] border border-[#262b33] hover:border-[#38404d] text-xs text-[#e6e8eb] py-1 px-2 rounded focus:outline-none cursor-pointer transition-colors"
         >
+          {customBbox && (
+            <option value="custom" className="bg-[#161a20] text-[#f5a524]">
+              🌐 Live Viewport (Custom)
+            </option>
+          )}
           {AIRSPACE_REGIONS.map((region) => (
             <option key={region.id} value={region.id} className="bg-[#161a20] text-[#e6e8eb]">
               {region.name}

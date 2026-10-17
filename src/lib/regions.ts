@@ -2,6 +2,20 @@ import { AirspaceRegion } from "@/types/flight";
 
 export const AIRSPACE_REGIONS: AirspaceRegion[] = [
   {
+    id: "india",
+    name: "India & South Asia",
+    flag: "🇮🇳",
+    bbox: {
+      lamin: 8.0,
+      lomin: 68.0,
+      lamax: 32.0,
+      lomax: 90.0,
+    },
+    center: [20.5937, 78.9629], // Central India
+    zoom: 5,
+    description: "Indian subcontinent airspace (DEL, BOM, BLR, MAA, HYD)",
+  },
+  {
     id: "europe",
     name: "Western Europe",
     flag: "🇪🇺",
@@ -44,20 +58,6 @@ export const AIRSPACE_REGIONS: AirspaceRegion[] = [
     description: "Pacific coast corridor (LAX, SFO, SEA, SAN)",
   },
   {
-    id: "india",
-    name: "India & South Asia",
-    flag: "🇮🇳",
-    bbox: {
-      lamin: 8.0,
-      lomin: 68.0,
-      lamax: 32.0,
-      lomax: 90.0,
-    },
-    center: [20.5937, 78.9629], // Central India
-    zoom: 5,
-    description: "Indian subcontinent airspace (DEL, BOM, BLR, MAA, HYD)",
-  },
-  {
     id: "east_asia",
     name: "East Asia",
     flag: "🇯🇵",
@@ -87,7 +87,8 @@ export const AIRSPACE_REGIONS: AirspaceRegion[] = [
   },
 ];
 
-export const DEFAULT_REGION = AIRSPACE_REGIONS[0]; // Western Europe
+export const DEFAULT_REGION =
+  AIRSPACE_REGIONS.find((r) => r.id === "india") || AIRSPACE_REGIONS[0];
 
 export function getRegionById(id: string): AirspaceRegion {
   return AIRSPACE_REGIONS.find((r) => r.id === id) || DEFAULT_REGION;

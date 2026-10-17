@@ -141,3 +141,101 @@ export function getRecordedAirspace(regionId = "europe"): Aircraft[] {
   const now = Date.now();
   return vectors.map((v) => normalizeStateVector(v, now));
 }
+
+/**
+ * Generates synthetic aircraft dynamically distributed within an arbitrary bounding box
+ * Used when OpenSky has no receiver coverage or rate limits in custom viewed areas.
+ */
+export function generateAirspaceForBbox(
+  lamin: number,
+  lomin: number,
+  lamax: number,
+  lomax: number,
+  count = 14
+): Aircraft[] {
+  const airlines = [
+    { prefix: "AIC", country: "India" },
+    { prefix: "IGO", country: "India" },
+    { prefix: "BAW", country: "United Kingdom" },
+    { prefix: "DLH", country: "Germany" },
+    { prefix: "UAE", country: "United Arab Emirates" },
+    { prefix: "AFR", country: "France" },
+    { prefix: "AAL", country: "United States" },
+    { prefix: "UAL", country: "United States" },
+    { prefix: "SIA", country: "Singapore" },
+    { prefix: "QFA", country: "Australia" },
+    { prefix: "ANA", country: "Japan" },
+    { prefix: "KLM", country: "Netherlands" },
+  ];
+
+  const now = Date.now();
+  const dLat = lamax - lamin;
+  const dLon = lomax - lomin;
+
+  const result: Aircraft[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const airline = airlines[i % airlines.length];
+    const flightNum = 100 + ((i * 73 + 17) % 890);
+    const callsign = `${airline.prefix}${flightNum}`;
+    const hex = (0x800000 + (Math.abs(Math.floor(lamin * 1000 + lomin * 1000)) + i * 499) % 0x6fffff)
+      .toString(16)
+      .padStart(6, "0");
+
+    // Distribute nicely across the bounding box
+    const uLat = 0.15 + 0.7 * (((i * 37) % 100) / 100);
+    const uLon = 0.15 + 0.7 * (((i * 59 + 23) % 100) / 100);
+    const lat = Number((lamin + dLat * uLat).toFixed(4));
+    const lon = Number((lomin + dLon * uLon).toFixed(4));
+
+    const altFt = 8000 + ((i * 3500) % 34000);
+    const altM = Math.round(altFt / METERS_TO_FEET);
+    const speedKts = 220 + ((i * 45) % 300);
+    const speedMs = Math.round(speedKts / MS_TO_KNOTS);
+    const heading = (i * 53) % 360;
+    const vertRateFpm = i % 3 === 0 ? -1200 : i % 4 === 0 ? 1500 : 0;
+    const vertRateMs = Math.round(vertRateFpm / MS_TO_FPM);
+
+    const squawk = i === 3 ? "7700" : "1000";
+
+    result.push({
+      icao24: hex,
+      callsign,
+      originCountry: airline.country,
+      timePosition: Math.floor(now / 1000),
+      lastContact: Math.floor(now / 1000),
+      longitude: lon,
+      latitude: lat,
+      baroAltitude: altM,
+      baroAltitudeFt: altFt,
+      geoAltitude: altM,
+      geoAltitudeFt: altFt,
+      onGround: false,
+      velocity: speedMs,
+      velocityKts: speedKts,
+      velocityKmh: Math.round(speedKts * 1.852),
+      trueTrack: heading,
+      verticalRate: vertRateMs,
+      verticalRateFpm: vertRateFpm,
+      squawk,
+      spi: false,
+      positionSource: 0,
+      lastSeenAt: now,
+      isStale: false,
+      history: [
+        {
+          lat,
+          lon,
+          altitudeMeters: altM,
+          altitudeFeet: altFt,
+          velocityKnots: speedKts,
+          heading,
+          timestamp: now,
+        },
+      ],
+      firstSeenAt: now,
+    });
+  }
+
+  return result;
+}

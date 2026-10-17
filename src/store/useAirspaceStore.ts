@@ -106,7 +106,7 @@ export const useAirspaceStore = create<AirspaceStoreState>((set, get) => ({
   alerts: [],
   unreadAlertCount: 0,
 
-  basemap: "dark",
+  basemap: "satellite",
   unitSystem: "aviation",
   isFollowingSelected: false,
   flyToTarget: null,

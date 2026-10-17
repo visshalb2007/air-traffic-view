@@ -20,50 +20,69 @@ export function useFlightPolling() {
   const lastFetchTimeRef = useRef(0);
   const isTabVisibleRef = useRef(true);
 
-  const fetchFlights = useCallback(async () => {
-    // Prevent overlapping requests
-    if (isFetchingRef.current) return;
+  const fetchFlights = useCallback(
+    async (forceImmediate = false) => {
+      // Prevent overlapping requests
+      if (isFetchingRef.current) return;
 
-    // Throttle: enforce minimum 5s gap
-    const now = Date.now();
-    if (now - lastFetchTimeRef.current < 4500) {
-      return;
-    }
-
-    isFetchingRef.current = true;
-    lastFetchTimeRef.current = now;
-
-    try {
-      const params = new URLSearchParams();
-      if (isOfflineMode) {
-        params.set("offline", "true");
+      // Throttle: enforce minimum 4s gap unless forceImmediate is requested (e.g. map pan or region switch)
+      const now = Date.now();
+      if (!forceImmediate && now - lastFetchTimeRef.current < 4000) {
+        return;
       }
 
-      if (customBbox) {
-        params.set("lamin", String(customBbox.lamin));
-        params.set("lomin", String(customBbox.lomin));
-        params.set("lamax", String(customBbox.lamax));
-        params.set("lomax", String(customBbox.lomax));
-      } else {
-        params.set("region", currentRegion.id);
-      }
+      isFetchingRef.current = true;
+      lastFetchTimeRef.current = now;
 
-      const res = await fetch(`/api/flights?${params.toString()}`);
-      if (!res.ok) {
-        throw new Error(`Proxy responded with HTTP ${res.status}`);
-      }
+      try {
+        const state = useAirspaceStore.getState();
+        const bbox = state.customBbox;
+        const region = state.currentRegion;
 
-      const data: FlightApiResponse = await res.json();
-      if (data.success && data.aircraft) {
-        updateAircraftTelemetry(data.aircraft, data.meta);
+        const params = new URLSearchParams();
+        if (state.isOfflineMode) {
+          params.set("offline", "true");
+        }
+
+        if (bbox) {
+          params.set("lamin", String(bbox.lamin));
+          params.set("lomin", String(bbox.lomin));
+          params.set("lamax", String(bbox.lamax));
+          params.set("lomax", String(bbox.lomax));
+        } else {
+          params.set("region", region.id);
+        }
+
+        const res = await fetch(`/api/flights?${params.toString()}`);
+        if (!res.ok) {
+          throw new Error(`Proxy responded with HTTP ${res.status}`);
+        }
+
+        const data: FlightApiResponse = await res.json();
+        if (data.success && data.aircraft) {
+          updateAircraftTelemetry(data.aircraft, data.meta);
+        }
+      } catch (err: any) {
+        console.error("[useFlightPolling] Error fetching flight telemetry:", err.message);
+        setConnectionState("error");
+      } finally {
+        isFetchingRef.current = false;
       }
-    } catch (err: any) {
-      console.error("[useFlightPolling] Error fetching flight telemetry:", err.message);
-      setConnectionState("error");
-    } finally {
-      isFetchingRef.current = false;
-    }
-  }, [currentRegion, customBbox, isOfflineMode, updateAircraftTelemetry, setConnectionState]);
+    },
+    [updateAircraftTelemetry, setConnectionState]
+  );
+
+  // Debounced fetch when user moves/zooms the map to a new central location
+  useEffect(() => {
+    if (!customBbox) return;
+
+    const timer = setTimeout(() => {
+      fetchFlights(true);
+      setPollCountdown(10);
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [customBbox, fetchFlights, setPollCountdown]);
 
   // Page Visibility Listener
   useEffect(() => {
@@ -72,22 +91,22 @@ export function useFlightPolling() {
       isTabVisibleRef.current = isVisible;
 
       if (isVisible) {
-        // Tab became visible: check if data is stale (> 12s old)
         const elapsed = Date.now() - lastFetchTimeRef.current;
         if (elapsed > 12000 && isPolling) {
-          fetchFlights();
+          fetchFlights(true);
+          setPollCountdown(10);
         }
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [fetchFlights, isPolling]);
+  }, [fetchFlights, isPolling, setPollCountdown]);
 
   // Polling Interval & Countdown loop
   useEffect(() => {
     // Initial fetch on mount or region/offline switch
-    fetchFlights();
+    fetchFlights(true);
     setPollCountdown(10);
 
     const timer = setInterval(() => {
@@ -97,7 +116,7 @@ export function useFlightPolling() {
 
       const state = useAirspaceStore.getState();
       if (state.pollCountdown <= 1) {
-        fetchFlights();
+        fetchFlights(true);
         setPollCountdown(10);
       } else {
         decrementCountdown();
@@ -108,9 +127,9 @@ export function useFlightPolling() {
   }, [fetchFlights, isPolling, currentRegion.id, isOfflineMode, setPollCountdown, decrementCountdown]);
 
   return {
-    fetchFlights,
+    fetchFlights: () => fetchFlights(true),
     manualRefresh: () => {
-      fetchFlights();
+      fetchFlights(true);
       setPollCountdown(10);
     },
   };

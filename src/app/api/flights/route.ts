@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRegionById } from "@/lib/regions";
-import { getRecordedAirspace, normalizeStateVector } from "@/lib/mockData";
+import { generateAirspaceForBbox, getRecordedAirspace, normalizeStateVector } from "@/lib/mockData";
 import { Aircraft, FlightApiResponse, OpenSkyApiResponse } from "@/types/flight";
 
 export const dynamic = "force-dynamic";
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
   const startTime = Date.now();
   const searchParams = req.nextUrl.searchParams;
 
-  const regionId = searchParams.get("region") || "europe";
+  const regionId = searchParams.get("region") || process.env.DEFAULT_REGION || "india";
   const forceOffline = searchParams.get("offline") === "true";
 
   // Bounding box params
@@ -81,8 +81,9 @@ export async function GET(req: NextRequest) {
   let lomin = parseFloat(searchParams.get("lomin") || "");
   let lamax = parseFloat(searchParams.get("lamax") || "");
   let lomax = parseFloat(searchParams.get("lomax") || "");
+  const hasCustomBbox = !isNaN(lamin) && !isNaN(lomin) && !isNaN(lamax) && !isNaN(lomax);
 
-  if (isNaN(lamin) || isNaN(lomin) || isNaN(lamax) || isNaN(lomax)) {
+  if (!hasCustomBbox) {
     const region = getRegionById(regionId);
     lamin = region.bbox.lamin;
     lomin = region.bbox.lomin;
@@ -90,11 +91,24 @@ export async function GET(req: NextRequest) {
     lomax = region.bbox.lomax;
   }
 
+  // Safety clamp on bbox dimensions so OpenSky never rejects with 400
+  const latCenter = (lamin + lamax) / 2;
+  const lonCenter = (lomin + lomax) / 2;
+  const halfLat = Math.min(Math.abs(lamax - lamin) / 2, 8);
+  const halfLon = Math.min(Math.abs(lomax - lomin) / 2, 10);
+
+  lamin = Math.max(-85, Number((latCenter - halfLat).toFixed(4)));
+  lamax = Math.min(85, Number((latCenter + halfLat).toFixed(4)));
+  lomin = Math.max(-180, Number((lonCenter - halfLon).toFixed(4)));
+  lomax = Math.min(180, Number((lonCenter + halfLon).toFixed(4)));
+
   const cacheKey = `${lamin.toFixed(2)},${lomin.toFixed(2)},${lamax.toFixed(2)},${lomax.toFixed(2)}`;
 
   // 1. Explicit offline mode
   if (forceOffline) {
-    const fallbackAircraft = getRecordedAirspace(regionId);
+    const fallbackAircraft = hasCustomBbox
+      ? generateAirspaceForBbox(lamin, lomin, lamax, lomax)
+      : getRecordedAirspace(regionId);
     const response: FlightApiResponse = {
       success: true,
       time: Math.floor(Date.now() / 1000),
@@ -199,8 +213,10 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // 5. Fallback if upstream error
-  const fallbackAircraft = getRecordedAirspace(regionId);
+  // 5. Fallback if upstream error or empty live states
+  const fallbackAircraft = hasCustomBbox
+    ? generateAirspaceForBbox(lamin, lomin, lamax, lomax)
+    : getRecordedAirspace(regionId);
   const response: FlightApiResponse = {
     success: true,
     time: Math.floor(Date.now() / 1000),

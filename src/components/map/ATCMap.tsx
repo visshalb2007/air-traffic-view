@@ -44,6 +44,8 @@ export default function ATCMap() {
     aircraftMap,
   } = useAirspaceStore();
 
+  const isUserInteractingRef = useRef(false);
+
   useEffect(() => {
     if (!mapContainerRef.current || map) return;
 
@@ -57,7 +59,7 @@ export default function ATCMap() {
       attributionControl: true,
     });
 
-    const activeTileConfig = BASEMAP_TILES[basemap] || BASEMAP_TILES.dark;
+    const activeTileConfig = BASEMAP_TILES[basemap] || BASEMAP_TILES.satellite;
     const initialLayer = L.tileLayer(activeTileConfig.url, {
       attribution: activeTileConfig.attribution,
       maxZoom: activeTileConfig.maxZoom,
@@ -77,9 +79,61 @@ export default function ATCMap() {
       setSelectedAircraft(null);
     });
 
+    // Viewport-based flight query on user pan or zoom
+    const updateViewportBbox = () => {
+      const b = leafletMap.getBounds();
+      const c = leafletMap.getCenter();
+      const latSpan = Math.abs(b.getNorth() - b.getSouth());
+      const lonSpan = Math.abs(b.getEast() - b.getWest());
+
+      // Limit bounding box span around central location so OpenSky responds quickly
+      const halfLat = Math.min(latSpan / 2, 8);
+      const halfLon = Math.min(lonSpan / 2, 10);
+
+      const lamin = Math.max(-85, Number((c.lat - halfLat).toFixed(4)));
+      const lamax = Math.min(85, Number((c.lat + halfLat).toFixed(4)));
+      const lomin = Math.max(-180, Number((c.lng - halfLon).toFixed(4)));
+      const lomax = Math.min(180, Number((c.lng + halfLon).toFixed(4)));
+
+      useAirspaceStore.getState().setCustomBbox({ lamin, lomin, lamax, lomax });
+    };
+
+    const container = leafletMap.getContainer();
+    const handleUserStart = () => {
+      isUserInteractingRef.current = true;
+      useAirspaceStore.getState().setIsFollowingSelected(false);
+    };
+
+    container.addEventListener("mousedown", handleUserStart);
+    container.addEventListener("touchstart", handleUserStart);
+    container.addEventListener("wheel", handleUserStart);
+
+    leafletMap.on("dragstart", handleUserStart);
+    leafletMap.on("dragend", () => {
+      isUserInteractingRef.current = false;
+      updateViewportBbox();
+    });
+
+    leafletMap.on("zoomend", () => {
+      if (isUserInteractingRef.current) {
+        isUserInteractingRef.current = false;
+        updateViewportBbox();
+      }
+    });
+
+    leafletMap.on("moveend", () => {
+      if (isUserInteractingRef.current) {
+        isUserInteractingRef.current = false;
+        updateViewportBbox();
+      }
+    });
+
     setMap(leafletMap);
 
     return () => {
+      container.removeEventListener("mousedown", handleUserStart);
+      container.removeEventListener("touchstart", handleUserStart);
+      container.removeEventListener("wheel", handleUserStart);
       leafletMap.remove();
       setMap(null);
     };
