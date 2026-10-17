@@ -25,8 +25,11 @@ export default function AirTrafficDashboard() {
   const [introKey, setIntroKey] = useState(1);
   const [showIntro, setShowIntro] = useState(true);
 
+  const handleIntroComplete = () => {
+    setShowIntro(false);
+  };
+
   const handleReplayIntro = () => {
-    sessionStorage.removeItem("skywatch_intro_seen");
     setIntroKey((prev) => prev + 1);
     setShowIntro(true);
   };
@@ -37,7 +40,7 @@ export default function AirTrafficDashboard() {
       {showIntro && (
         <FlightIntroAnimation
           key={introKey}
-          onComplete={() => setShowIntro(false)}
+          onComplete={handleIntroComplete}
         />
       )}
 
