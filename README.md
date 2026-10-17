@@ -1,6 +1,7 @@
 # SKYWATCH ATC — Real-Time Air Traffic Surveillance Dashboard
 
 An enterprise-grade, high-resilience tactical Air Traffic Control (ATC) monitoring system built with **Next.js 14 (App Router)**, **TypeScript**, **Tailwind CSS**, **Leaflet**, and **Zustand**, powered by live telemetry from the **OpenSky Network REST API**.
+<img width="1917" height="893" alt="image" src="https://github.com/user-attachments/assets/a0fdc32e-289d-4fa0-87b5-0b86ba49d311" />
 
 ![ATC Surveillance Radar](https://img.shields.io/badge/Airspace-Live%20Surveillance-00e5ff?style=for-the-badge&logo=radar)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)
