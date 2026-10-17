@@ -319,14 +319,14 @@ export const useAirspaceStore = create<AirspaceStoreState>((set, get) => ({
     const updatedMap: Record<string, Aircraft> = {};
     let hasChanges = false;
 
-    for (const [icao, ac] of Object.entries(currentMap)) {
+    for (const icao in currentMap) {
+      const ac = currentMap[icao];
       if (ac.onGround || ac.velocity === null || ac.latitude === null || ac.longitude === null) {
         updatedMap[icao] = ac;
         continue;
       }
 
-      const reckoned = computeDeadReckonedAircraft(ac, now);
-      updatedMap[icao] = reckoned;
+      updatedMap[icao] = computeDeadReckonedAircraft(ac, now);
       hasChanges = true;
     }
 
