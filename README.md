@@ -144,7 +144,6 @@ $$\delta = \frac{\Delta d}{R_{\text{Earth}}} = \frac{v_{\text{m/s}} \cdot \Delta
 
 $$\phi_2 = \arcsin\left(\sin \phi_1 \cdot \cos \delta + \cos \phi_1 \cdot \sin \delta \cdot \cos \theta\right)$$
 
-$$\lambda_2 = \lambda_1 + \operatorname{atan2}\left(\sin \theta \cdot \sin \delta \cdot \cos \phi_1, \; \cos \delta - \sin \phi_1 \cdot \sin \phi_2\right)$$
 
 Where:
 - $\phi_1, \lambda_1$: Initial latitude and longitude coordinates in radians.
