@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { useAirspaceStore } from "@/store/useAirspaceStore";
 import { Aircraft } from "@/types/flight";
@@ -77,6 +77,28 @@ export default function AircraftMarkerLayer({ map }: Props) {
   const { aircraftMap, selectedIcao24, filters, setSelectedAircraft } = useAirspaceStore();
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
 
+  // Dynamic Viewport Culling for 60 FPS rendering
+  const [viewportBounds, setViewportBounds] = useState<L.LatLngBounds | null>(() => {
+    try {
+      return map.getBounds().pad(0.2);
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleMove = () => {
+      try {
+        setViewportBounds(map.getBounds().pad(0.2));
+      } catch {}
+    };
+
+    map.on("moveend zoomend", handleMove);
+    return () => {
+      map.off("moveend zoomend", handleMove);
+    };
+  }, [map]);
+
   useEffect(() => {
     const existingMarkers = markersRef.current;
     const currentIcaos = new Set<string>();
@@ -85,6 +107,13 @@ export default function AircraftMarkerLayer({ map }: Props) {
       const lat = ac.deadReckonedLat ?? ac.latitude;
       const lon = ac.deadReckonedLon ?? ac.longitude;
       if (lat === null || lon === null) return false;
+
+      // Viewport culling (always render selected aircraft)
+      if (viewportBounds && ac.icao24 !== selectedIcao24) {
+        if (!viewportBounds.contains([lat, lon])) {
+          return false;
+        }
+      }
 
       // Filter: Search Query
       if (filters.searchQuery.trim()) {
@@ -173,14 +202,14 @@ export default function AircraftMarkerLayer({ map }: Props) {
       }
     }
 
-    // Prune markers no longer active
+    // Prune markers no longer in viewport or no longer active
     existingMarkers.forEach((marker, icao) => {
       if (!currentIcaos.has(icao)) {
         marker.remove();
         existingMarkers.delete(icao);
       }
     });
-  }, [aircraftMap, selectedIcao24, filters, map, setSelectedAircraft]);
+  }, [aircraftMap, selectedIcao24, filters, map, setSelectedAircraft, viewportBounds]);
 
   useEffect(() => {
     const currentMarkers = markersRef.current;

@@ -41,7 +41,17 @@ interface AirspaceStoreState {
   alerts: AlertEvent[];
   unreadAlertCount: number;
 
+  // Basemap & Units
+  basemap: "dark" | "satellite" | "osm";
+  unitSystem: "aviation" | "metric";
+  isFollowingSelected: boolean;
+  flyToTarget: [number, number] | null;
+
   // Actions
+  setBasemap: (basemap: "dark" | "satellite" | "osm") => void;
+  setUnitSystem: (unit: "aviation" | "metric") => void;
+  setIsFollowingSelected: (follow: boolean) => void;
+  triggerFlyTo: (coords: [number, number] | null) => void;
   setSelectedAircraft: (icao24: string | null) => void;
   setHighlightedAircraft: (icao24: string | null) => void;
   setRegion: (region: AirspaceRegion) => void;
@@ -96,7 +106,28 @@ export const useAirspaceStore = create<AirspaceStoreState>((set, get) => ({
   alerts: [],
   unreadAlertCount: 0,
 
-  setSelectedAircraft: (icao24) => set({ selectedIcao24: icao24 }),
+  basemap: "dark",
+  unitSystem: "aviation",
+  isFollowingSelected: false,
+  flyToTarget: null,
+
+  setBasemap: (basemap) => set({ basemap }),
+  setUnitSystem: (unitSystem) => set({ unitSystem }),
+  setIsFollowingSelected: (isFollowingSelected) => set({ isFollowingSelected }),
+  triggerFlyTo: (flyToTarget) => set({ flyToTarget }),
+
+  setSelectedAircraft: (icao24) => {
+    const state = get();
+    set({ selectedIcao24: icao24 });
+    if (icao24 && state.aircraftMap[icao24]) {
+      const ac = state.aircraftMap[icao24];
+      const lat = ac.deadReckonedLat ?? ac.latitude;
+      const lon = ac.deadReckonedLon ?? ac.longitude;
+      if (lat !== null && lon !== null) {
+        set({ flyToTarget: [lat, lon] });
+      }
+    }
+  },
   setHighlightedAircraft: (icao24) => set({ highlightedIcao24: icao24 }),
 
   setRegion: (region) => {
