@@ -3,6 +3,8 @@ import { getRegionById, DEFAULT_REGION } from "@/lib/regions";
 import { getRecordedAirspace, normalizeStateVector } from "@/lib/mockData";
 import { Aircraft, FlightApiResponse, OpenSkyApiResponse } from "@/types/flight";
 
+export const dynamic = "force-dynamic";
+
 interface CacheEntry {
   timestamp: number;
   expiresAt: number;
